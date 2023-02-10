@@ -105,8 +105,10 @@ def generate_all_cidrs(ips):
 
 async def web_requests(ip, port):
     info = {'url':None, 'http_status': None, 'title': None, }
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"http://{ip}:{port}") as resp:
+    con = aiohttp.TCPConnector(ssl=False)
+    async with aiohttp.ClientSession(connector=con, trust_env=True) as session:
+        url = f"https://{ip}:{port}" if int(port) == 443 else f"http://{ip}:{port}"
+        async with session.get(url) as resp:
             html = await resp.text()
             if opt.keywords:
                 result = re.findall(opt.keywords, html)
@@ -118,7 +120,7 @@ async def web_requests(ip, port):
                 except:
                     info['title'] = None
             info['http_status'] = resp.status
-            info['url'] = f'http://{ip}:{port}'
+            info['url'] = url
             logger.info(info)
 
 
